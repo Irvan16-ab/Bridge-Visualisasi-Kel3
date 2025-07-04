@@ -1,0 +1,1298 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Bridge Point Deformation Visualizer</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        min-height: 100vh;
+        background: radial-gradient(
+            ellipse 100% 60% at 60% 50%,
+            #0f196d 0%,
+            #1b1758 100%
+          )
+          fixed;
+        font-family: "Segoe UI", Arial, sans-serif;
+        color: #fff;
+      }
+      .landing-bg {
+        min-height: 100vh;
+      }
+      header {
+        padding: 2rem 1rem 0.5rem 1rem;
+        text-align: center;
+      }
+      .header-bar.precise-align {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 44px;
+        margin-bottom: 0.7em;
+      }
+      .header-logo.precise-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 16px #00eaff99, 0 0 2px #00eaff55;
+        border: 3px solid #fff;
+      }
+      .header-title-group.precise-title-group {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        min-width: 320px;
+      }
+      .header-title.precise-title {
+        color: #00b1f7;
+        font-size: 2.5em;
+        font-weight: 900;
+        letter-spacing: 0.045em;
+        margin: 0;
+        padding: 0;
+        text-shadow: 0 0 8px #ffffffcb, 0 0 10px rgba(4, 82, 250, 0.493),
+          0 0 2px #fff;
+        filter: drop-shadow(0 0 1px #ffffff);
+      }
+      .header-subtitle.precise-subtitle {
+        color: #59f300;
+        font-size: 1.09em;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-shadow: 0 0 8px #15fc00;
+      }
+      .header-desc.precise-header-desc {
+        color: #ffffff;
+        font-size: 1.08em;
+        margin: 1.2em auto 0.6em auto;
+        text-shadow: 0 0 1px #ffffff;
+        border-bottom: 2.5px solid #22009c44;
+        max-width: 800px;
+        padding-bottom: 0.9em;
+      }
+      main {
+        max-width: 1100px;
+        margin: 2rem auto 0 auto;
+        padding: 2.3rem 1rem;
+        background: rgba(10, 9, 80, 0.72);
+        border-radius: 24px;
+        box-shadow: 0 0 40px #0083c0, 0 0 3px #111;
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .main-panel.precise-main-panel {
+        margin: 0 auto;
+        background: linear-gradient(135deg, #102b44 86%, #0a5080 100%);
+        border-radius: 20px;
+        box-shadow: 0 0 25px #00d1a4, 0 0 2px #0085b9;
+        padding: 2.1rem 1.6rem 2rem 1.6rem;
+        max-width: 870px;
+        width: 100%;
+        animation: fadeinPanel 1.3s cubic-bezier(0.4, 1.7, 0.4, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      @keyframes fadeinPanel {
+        from {
+          opacity: 0;
+          transform: translateY(40px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      .panel-title.precise-panel-title {
+        font-size: 1.3em;
+        color: #fdfdfd;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        margin-bottom: 2.1em;
+        text-align: center;
+        text-shadow: 0 0 10px #0026ffb5, 0 0 4px #fff;
+      }
+      .panel-grid.precise-panel-grid {
+        display: flex;
+        gap: 60px;
+        justify-content: center;
+        margin-bottom: 2.1em;
+        width: 100%;
+      }
+      .sides-panel.precise-sides-panel {
+        background: #171e2c;
+        border-radius: 15px;
+        box-shadow: 0 0 30px #00eaff33;
+        border: 1.5px solid #00eaff22;
+        padding: 1.2rem 2rem 1.2rem 2rem;
+        min-width: 295px;
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .side-title.precise-side-title {
+        color: #19e3ff;
+        font-size: 1.22em;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 1.5em;
+        margin-top: 0.4em;
+        letter-spacing: 0.07em;
+        text-shadow: 0 0 13px #00eaff99;
+      }
+      .side-row.precise-side-row {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.7em;
+        background: rgba(15, 24, 40, 0.95);
+        border-radius: 11px;
+        box-shadow: 0 0 16px #00eaff1a, 0 0 5px #0ff2;
+        border: 1.5px solid #00eaff33;
+        margin-bottom: 1.1em;
+        padding: 0.7em 0.7em 0.7em 1.1em;
+        min-height: 54px;
+        position: relative;
+        overflow: hidden;
+      }
+      .epoch-label.precise-epoch-label {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.09em;
+        min-width: 71px;
+        text-shadow: 0 0 8px #00eaff44;
+        text-align: left;
+        display: inline-block;
+        flex: 0 0 72px;
+        letter-spacing: 0.01em;
+        z-index: 1;
+      }
+      .file-btn.precise-file-btn {
+        flex: 1 1 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        height: 38px;
+        position: relative;
+        z-index: 10;
+      }
+      .custom-file-input {
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        cursor: pointer;
+        z-index: 2;
+      }
+      .custom-file-label.precise-file-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 148px;
+        height: 38px;
+        border-radius: 9px;
+        border: none;
+        background: linear-gradient(90deg, rgb(2, 118, 153) 0%, #0094ff 100%);
+        color: #ffffff;
+        font-size: 1.02em;
+        font-weight: 900;
+        box-shadow: 0 0 18px #00eaff99, 0 0 2px #0ff,
+          0 0 0 2.5px #003d5266 inset;
+        text-shadow: 0 0 7px #00eaffcc, 0 0 2px #232d3b;
+        outline: none;
+        transition: background 0.24s cubic-bezier(0.62, 0.01, 0.32, 1.06),
+          box-shadow 0.18s, color 0.24s,
+          width 0.36s cubic-bezier(0.42, 0.02, 0.32, 1.25), left 0.35s,
+          transform 0.19s cubic-bezier(0.85, 0, 0.32, 1.16);
+        position: relative;
+        margin: 0 auto;
+        user-select: none;
+        overflow: hidden;
+        padding: 0 0.6em;
+        cursor: pointer;
+        left: 0;
+        opacity: 1;
+        will-change: width, left, box-shadow;
+      }
+      .custom-file-label.precise-file-label.filled {
+        background: linear-gradient(90deg, #1ef1e4 0%, #00eaff 100%);
+        color: #015cb3;
+        box-shadow: 0 0 26px #00ffb9b7, 0 0 20px #0ff, 0 0 0 7px #003d5266 inset;
+        font-size: 1.01em;
+        text-shadow: 0 0 10px #142e36cc, 0 0 3px #232d3b;
+        width: 188px;
+        left: 0;
+        animation: btn-slidein 0.34s cubic-bezier(0.62, 0.01, 0.32, 1.06);
+      }
+      @keyframes btn-slidein {
+        from {
+          transform: scale(0.85) translateX(-34px);
+          opacity: 0.2;
+        }
+        to {
+          transform: scale(1) translateX(0);
+          opacity: 1;
+        }
+      }
+      .custom-file-label.precise-file-label::before {
+        content: "Drag File Here";
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 1.01em;
+        text-shadow: 0 0 7px #00eaffcc;
+        letter-spacing: 0.04em;
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 1;
+        background: none;
+        transition: opacity 0.19s;
+      }
+      .custom-file-label.precise-file-label.filled::before {
+        content: "";
+        opacity: 0;
+      }
+      /* Animasi Slide untuk Indikator */
+      .file-status.precise-file-status {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        position: relative;
+        margin-left: 0.5em;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        pointer-events: none;
+        background: none;
+        z-index: 15;
+        opacity: 1;
+        transition: transform 0.34s cubic-bezier(0.7, 0.01, 0.55, 1.06),
+          opacity 0.25s;
+        transform: translateX(0);
+      }
+      .file-status.precise-file-status.active {
+        animation: indicator-slidein 0.33s cubic-bezier(0.81, 0.01, 0.45, 1.36);
+        opacity: 1;
+        transform: translateX(0);
+      }
+      @keyframes indicator-slidein {
+        from {
+          opacity: 0;
+          transform: translateX(-22px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      .check-icon-circle {
+        filter: drop-shadow(0 0 13px #64ff6a) drop-shadow(0 0 19px #f6ffb3)
+          drop-shadow(0 0 8px #f6ffb3aa);
+        border-radius: 50%;
+        display: block;
+        background: none;
+        margin-left: 0.2em;
+      }
+      .x-icon-circle {
+        filter: drop-shadow(0 0 7px #ff4545cc) drop-shadow(0 0 2px #fff);
+        border-radius: 50%;
+        display: block;
+        background: none;
+        margin-left: 0.2em;
+      }
+      /* --- END FILE UPLOAD --- */
+      .panel-btn-row.precise-panel-btn-row {
+        margin-top: 1.7em;
+        display: flex;
+        gap: 1.4em;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+      }
+      .neon-btn.precise-neon-btn {
+        background: linear-gradient(90deg, #04d4d4 0%, #1d00be 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 12px;
+        padding: 0.65em 2.2em;
+        font-size: 1.1em;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 0 24px #00eaff99, 0 0 4px rgb(5, 50, 199);
+        text-shadow: 0 0 21px #180199cc, 0 0 2px #232d3b;
+        outline: none;
+        margin-bottom: 1em;
+        transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+        opacity: 0;
+        animation: fadeinBtn 1.2s cubic-bezier(0.4, 1.7, 0.4, 0.95) forwards;
+      }
+      .neon-btn.sm {
+        padding: 0.43em 1.2em;
+        font-size: 1em;
+      }
+      .neon-btn:hover,
+      .neon-btn:focus {
+        background: linear-gradient(90deg, #eeeeee 0%, #00eaff 100%);
+        color: #002a3a;
+        box-shadow: 0 0 38px #00eaffcc, 0 0 14px #0ff;
+      }
+      #errorMsg {
+        color: #ff4545;
+        background: #2c2323;
+        border-left: 4px solid #ff4545;
+        padding: 0.5em 1em;
+        border-radius: 7px;
+        margin: 1em auto;
+        display: none;
+        font-weight: bold;
+        max-width: 500px;
+      }
+      #visualization {
+        margin-top: 2.9em;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .controls-group.precise-controls-group {
+        margin-bottom: 1.5em;
+        width: 100%;
+      }
+      .controls-row.precise-controls-row {
+        display: flex;
+        align-items: center;
+        gap: 2em;
+        flex-wrap: wrap;
+        margin-bottom: 0.7em;
+        justify-content: center;
+      }
+      label {
+        color: #00c096;
+        font-weight: 700;
+        margin-right: 1em;
+        text-shadow: 0 0 8px #00eaffcc, 0 0 2px #16213a;
+      }
+      input[type="number"] {
+        width: 60px;
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        border: 1px solid #00eaffcc;
+        background: #232d3b;
+        color: #00eaff;
+        font-weight: bold;
+        text-shadow: 0 0 4px #00eaffcc;
+      }
+      canvas {
+        display: block;
+        background: #0d2238;
+        border: 2px solid #00eaffcc;
+        border-radius: 15px;
+        margin: 2em auto;
+        box-shadow: 0 0 38px #00eaff55;
+      }
+      #legend {
+        margin-top: 1.2em;
+        display: flex;
+        gap: 18px;
+        justify-content: center;
+        font-size: 1.08em;
+        flex-wrap: wrap;
+        color: #00eaff;
+        text-shadow: 0 0 8px #00eaff88;
+      }
+      #legend .dot {
+        display: inline-block;
+        width: 1.2em;
+        height: 1.2em;
+        border-radius: 50%;
+        margin-right: 0.4em;
+        vertical-align: middle;
+        box-shadow: 0 0 18px #00eaff99, 0 0 2px #000;
+      }
+      footer {
+        text-align: center;
+        padding: 1.2em 0 0.5em 0;
+        color: #00eaff;
+        background: #10182b;
+        border-top: 2px solid #00eaff55;
+        margin-top: 3em;
+        font-weight: bold;
+        text-shadow: 0 0 10px #00eaffcc;
+        border-radius: 0 0 22px 22px;
+      }
+      @media (max-width: 1100px) {
+        main {
+          padding: 1.2rem;
+        }
+        .panel-grid {
+          gap: 11px;
+        }
+        .main-panel {
+          padding: 1.1rem 0.3rem;
+        }
+        .panel-grid.precise-panel-grid {
+          gap: 18px;
+        }
+        .sides-panel.precise-sides-panel {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+      @media (max-width: 900px) {
+        .panel-grid.precise-panel-grid {
+          flex-direction: column;
+          align-items: center;
+          gap: 28px;
+        }
+        .sides-panel.precise-sides-panel {
+          width: 100%;
+          min-width: unset;
+        }
+      }
+      @media (max-width: 700px) {
+        .header-bar.precise-align {
+          flex-direction: column;
+          gap: 10px;
+        }
+        .header-logo.precise-logo {
+          margin: 0 0 6px 0;
+        }
+        .panel-grid.precise-panel-grid {
+          flex-direction: column;
+          align-items: center;
+          gap: 18px;
+        }
+        .sides-panel.precise-sides-panel {
+          width: 100%;
+          min-width: unset;
+        }
+        .custom-file-label.precise-file-label,
+        .custom-file-label.precise-file-label.filled {
+          width: 95vw;
+          min-width: 90px;
+          max-width: 98vw;
+        }
+      }
+      @keyframes fadeinBtn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="landing-bg">
+      <header>
+        <div class="header-bar precise-justify">
+          <div class="header-title-group precise-title-group">
+            <h1 class="header-title precise-title">
+              Bridge Point Deformation Visualizer
+          </h1>
+          <span class="header-subtitle precise-subtitle"
+            >by Geomatics Engineering</span
+          >
+        </div>
+        <div class="header-desc precise-header-desc">
+          Visualization of Deformation Shifts on the Nongsa Pura Bridge Using
+          the WGS 1948 UTM Zone 48N Projection
+        </div>
+      </header>
+      <main>
+        <section id="uploader">
+          <div class="main-panel precise-main-panel">
+            <div class="panel-title precise-panel-title">
+              Atach files of Measurement Result on the Both Side of the Bridge
+            </div>
+            <div class="panel-grid precise-panel-grid">
+              <div class="sides-panel precise-sides-panel">
+                <div class="side-title precise-side-title">Left Side</div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 1</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_left_e1"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_left_e1"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_left_e1"
+                  ></span>
+                </div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 2</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_left_e2"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_left_e2"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_left_e2"
+                  ></span>
+                </div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 3</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_left_e3"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_left_e3"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_left_e3"
+                  ></span>
+                </div>
+              </div>
+              <div class="sides-panel precise-sides-panel">
+                <div class="side-title precise-side-title">Right Side</div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 1</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_right_e1"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_right_e1"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_right_e1"
+                  ></span>
+                </div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 2</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_right_e2"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_right_e2"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_right_e2"
+                  ></span>
+                </div>
+                <div class="side-row precise-side-row">
+                  <span class="epoch-label precise-epoch-label">Epoch 3</span>
+                  <label class="file-btn precise-file-btn">
+                    <input
+                      type="file"
+                      id="file_right_e3"
+                      class="custom-file-input"
+                      accept=".xlsx"
+                    />
+                    <span
+                      class="custom-file-label precise-file-label"
+                      id="label-file_right_e3"
+                    ></span>
+                  </label>
+                  <span
+                    class="file-status precise-file-status"
+                    id="status-file_right_e3"
+                  ></span>
+                </div>
+              </div>
+            </div>
+            <div class="panel-btn-row precise-panel-btn-row">
+              <button
+                id="processBtn"
+                class="neon-btn animate-fadein-btn precise-neon-btn"
+                style="animation-delay: 0.7s"
+              >
+                Visualize
+              </button>
+              <button
+                id="downloadDeformasi"
+                class="neon-btn animate-fadein-btn precise-neon-btn"
+                style="display: none; animation-delay: 0.7s"
+              >
+                Download File of Deformation Value
+              </button>
+            </div>
+            <div id="errorMsg"></div>
+          </div>
+        </section>
+        <section id="visualization" style="display: none">
+          <h2>Animation of Deformation</h2>
+          <div class="controls-group precise-controls-group">
+            <div class="controls-row precise-controls-row">
+              <label
+                >Point Size:
+                <input
+                  type="number"
+                  id="ballsize"
+                  value="16"
+                  min="1"
+                  max="60"
+                />
+                px</label
+              >
+              <label
+                >Animation Speed:
+                <input
+                  type="number"
+                  id="speed"
+                  value="1200"
+                  min="1"
+                  max="10000"
+                />
+                (ms/epoch)
+              </label>
+            </div>
+            <div class="controls-row precise-controls-row">
+              <button
+                id="btnPlay"
+                class="neon-btn sm animate-fadein-btn precise-neon-btn"
+                style="animation-delay: 0.1s"
+              >
+                Play Animation
+              </button>
+              <button
+                id="btnReset"
+                class="neon-btn sm animate-fadein-btn precise-neon-btn"
+                style="animation-delay: 0.25s"
+              >
+                Reset Animation
+              </button>
+            </div>
+          </div>
+          <canvas id="bridgeCanvas" width="1000" height="600"></canvas>
+          <div id="legend"></div>
+        </section>
+      </main>
+      <footer>
+        <p>
+          Made by Geomatics Group 3 |
+          <span class="neon-blue">design by Group 3</span>
+        </p>
+      </footer>
+    </div>
+    <script>
+      window.addEventListener("DOMContentLoaded", function () {
+        const fileInputIds = [
+          "file_left_e1",
+          "file_left_e2",
+          "file_left_e3",
+          "file_right_e1",
+          "file_right_e2",
+          "file_right_e3",
+        ];
+        fileInputIds.forEach(function (id) {
+          const input = document.getElementById(id);
+          if (!input) return;
+          input.addEventListener("change", function () {
+            const labelEl = document.getElementById("label-" + id);
+            const statusEl = document.getElementById("status-" + id);
+            if (labelEl) {
+              if (input.files[0]) {
+                labelEl.textContent = input.files[0].name;
+                labelEl.classList.add("filled");
+                labelEl.style.fontWeight = "900";
+                labelEl.style.color = "#002a3a";
+                labelEl.style.background =
+                  "linear-gradient(90deg, #1ef1e4 0%, #00eaff 100%)";
+                labelEl.style.boxShadow =
+                  "0 0 26px #00ffb9b7, 0 0 20px #0ff, 0 0 0 7px #003d5266 inset";
+                labelEl.style.textAlign = "center";
+                labelEl.style.display = "flex";
+                labelEl.style.alignItems = "center";
+                labelEl.style.justifyContent = "center";
+                labelEl.style.width = "188px";
+                // Animasi posisi tombol
+                labelEl.style.transition =
+                  "all 0.31s cubic-bezier(.62,.01,.32,1.06)";
+                setTimeout(() => {
+                  if (statusEl) statusEl.classList.add("active");
+                }, 50);
+              } else {
+                labelEl.textContent = "";
+                labelEl.classList.remove("filled");
+                labelEl.style.fontWeight = "";
+                labelEl.style.color = "";
+                labelEl.style.background = "";
+                labelEl.style.boxShadow = "";
+                labelEl.style.textAlign = "";
+                labelEl.style.display = "";
+                labelEl.style.alignItems = "";
+                labelEl.style.justifyContent = "";
+                labelEl.style.width = "";
+                if (statusEl) statusEl.classList.remove("active");
+              }
+            }
+            setFileStatus(id, input.files[0] ? "ok" : "");
+          });
+        });
+        function setFileStatus(id, status) {
+          const el = document.getElementById("status-" + id);
+          if (!el) return;
+          if (status === "ok") {
+            el.innerHTML = `
+        <svg class="check-icon-circle" viewBox="0 0 32 32" width="38" height="38">
+          <circle cx="16" cy="16" r="15" fill="#64ff6a" stroke="#fff" stroke-width="2"/>
+          <polyline points="10 17 15 22 23 12" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      `;
+            el.classList.add("active");
+          } else if (status === "fail") {
+            el.innerHTML = `
+        <svg class="x-icon-circle" viewBox="0 0 32 32" width="38" height="38">
+          <circle cx="16" cy="16" r="15" fill="#ff4545" stroke="#fff" stroke-width="2"/>
+          <line x1="11" y1="11" x2="21" y2="21" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+          <line x1="21" y1="11" x2="11" y2="21" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      `;
+            el.classList.add("active");
+          } else {
+            el.innerHTML = "";
+            el.classList.remove("active");
+          }
+        }
+
+        // ========== Visualisasi ==========
+        let ballSize = 18;
+        let animationSpeed = 1200;
+        const colorLeft = "#00eaff";
+        const colorRight = "#ff9100";
+        const colorBg = "#0b1622";
+        const epochs = 3;
+
+        const canvas = document.getElementById("bridgeCanvas");
+        const ctx = canvas.getContext("2d");
+        const errorMsg = document.getElementById("errorMsg");
+        const legend = document.getElementById("legend");
+        const ballsizeInput = document.getElementById("ballsize");
+        const speedInput = document.getElementById("speed");
+        const btnPlay = document.getElementById("btnPlay");
+        const btnReset = document.getElementById("btnReset");
+        const processBtn = document.getElementById("processBtn");
+        const visualizationPanel = document.getElementById("visualization");
+        const downloadBtn = document.getElementById("downloadDeformasi");
+
+        function resizeCanvas() {
+          if (window.innerWidth < 700) {
+            canvas.width = window.innerWidth * 0.98;
+            canvas.height = 320;
+          } else {
+            canvas.width = 900;
+            canvas.height = 480;
+          }
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        let dataLeft = [],
+          dataRight = [];
+        let currentEpoch = 0;
+        let animating = false;
+        let animationTimeout;
+
+        function readExcel(file) {
+          return new Promise((resolve, reject) => {
+            if (!file) return reject(new Error("No file provided"));
+            const fr = new FileReader();
+            fr.onload = (e) => {
+              const data = new Uint8Array(e.target.result);
+              const workbook = XLSX.read(data, { type: "array" });
+              const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+              const json = XLSX.utils.sheet_to_json(firstSheet, {
+                header: 1,
+                defval: "",
+              });
+              resolve(json);
+            };
+            fr.onerror = reject;
+            fr.readAsArrayBuffer(file);
+          });
+        }
+
+        function parsePointTable(table) {
+          if (!Array.isArray(table) || table.length < 2) return [];
+          const header = table[0].map((h) => h.toString().trim().toLowerCase());
+          const idxTitik = header.indexOf("titik");
+          const idxX = header.indexOf("utm_x");
+          const idxY = header.indexOf("utm_y");
+          const idxZ = header.indexOf("utm_z");
+          if (idxTitik === -1 || idxX === -1 || idxY === -1) return [];
+          const arr = [];
+          for (let i = 1; i < table.length; i++) {
+            const row = table[i];
+            if (!row[idxTitik] || row[idxTitik].toString().trim() === "")
+              continue;
+            arr.push({
+              name: row[idxTitik].toString(),
+              easting: Math.round(parseFloat(row[idxX]) * 1000) / 1000,
+              northing: Math.round(parseFloat(row[idxY]) * 1000) / 1000,
+              elev:
+                idxZ !== -1
+                  ? Math.round(parseFloat(row[idxZ]) * 1000) / 1000
+                  : 0,
+            });
+          }
+          return arr;
+        }
+
+        function drawEmpty() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = colorBg;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = "#222";
+          ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            "Belum ada data visualisasi",
+            canvas.width / 2,
+            canvas.height / 2
+          );
+        }
+
+        // animasi fade-in pada canvas saat mulai visualisasi
+        function fadeInCanvas(callback) {
+          let alpha = 0;
+          function step() {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            callback();
+            ctx.restore();
+            alpha += 0.07;
+            if (alpha < 1) {
+              requestAnimationFrame(step);
+            } else {
+              callback();
+            }
+          }
+          step();
+        }
+
+        function drawBridge(
+          showMovement = false,
+          moveProgress = 0,
+          moveFrom = 0
+        ) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = colorBg;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          if (dataLeft.length === 0 || dataRight.length === 0) {
+            drawEmpty();
+            return;
+          }
+          const all = [...dataLeft[0], ...dataRight[0]];
+          let minN = Math.min(...all.map((p) => p.northing));
+          let minE = Math.min(...all.map((p) => p.easting));
+          let maxN = Math.max(...all.map((p) => p.northing));
+          let maxE = Math.max(...all.map((p) => p.easting));
+          const pad = 60 + ballSize;
+          const W = canvas.width,
+            H = canvas.height;
+          const scaleE = (W - 2 * pad) / (maxE - minE || 1);
+          const scaleN = (H - 2 * pad) / (maxN - minN || 1);
+
+          function toCanvas(pt) {
+            return {
+              x: pad + (pt.easting - minE) * scaleE,
+              y: pad + (maxN - pt.northing) * scaleN,
+            };
+          }
+
+          if (showMovement) {
+            for (let sideIdx = 0; sideIdx < 2; sideIdx++) {
+              let data = sideIdx === 0 ? dataLeft : dataRight;
+              let color = sideIdx === 0 ? colorLeft : colorRight;
+              for (let i = 0; i < data[0].length; i++) {
+                let ptFrom = toCanvas(data[moveFrom][i]);
+                let ptTo = toCanvas(data[moveFrom + 1][i]);
+                let ptNow = {
+                  x: ptFrom.x + (ptTo.x - ptFrom.x) * moveProgress,
+                  y: ptFrom.y + (ptTo.y - ptFrom.y) * moveProgress,
+                };
+                ctx.save();
+                ctx.strokeStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 28;
+                ctx.globalAlpha = 0.85;
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(ptFrom.x, ptFrom.y);
+                ctx.lineTo(ptNow.x, ptNow.y);
+                ctx.stroke();
+                ctx.restore();
+              }
+            }
+            for (let sideIdx = 0; sideIdx < 2; sideIdx++) {
+              let data = sideIdx === 0 ? dataLeft : dataRight;
+              let color = sideIdx === 0 ? colorLeft : colorRight;
+              for (let i = 0; i < data[0].length; i++) {
+                let ptFrom = toCanvas(data[moveFrom][i]);
+                let ptTo = toCanvas(data[moveFrom + 1][i]);
+                let ptNow = {
+                  x: ptFrom.x + (ptTo.x - ptFrom.x) * moveProgress,
+                  y: ptFrom.y + (ptTo.y - ptFrom.y) * moveProgress,
+                };
+                ctx.save();
+                ctx.globalAlpha = 0.97;
+                ctx.beginPath();
+                ctx.arc(ptNow.x, ptNow.y, ballSize, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 30;
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                const fontSize = Math.max(13, Math.round(ballSize * 1.08));
+                ctx.font = `bold ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 18;
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "#0a2338";
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.99;
+                ctx.strokeText(data[0][i].name, ptNow.x, ptNow.y);
+                ctx.fillText(data[0][i].name, ptNow.x, ptNow.y);
+                ctx.restore();
+              }
+            }
+          } else {
+            for (let sideIdx = 0; sideIdx < 2; sideIdx++) {
+              let data = sideIdx === 0 ? dataLeft : dataRight;
+              let color = sideIdx === 0 ? colorLeft : colorRight;
+              for (let i = 0; i < data[0].length; i++) {
+                let pt = toCanvas(data[currentEpoch][i]);
+                ctx.save();
+                ctx.globalAlpha = 0.97;
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, ballSize, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 30;
+                ctx.fill();
+                ctx.restore();
+
+                ctx.save();
+                const fontSize = Math.max(13, Math.round(ballSize * 1.08));
+                ctx.font = `bold ${fontSize}px 'Segoe UI', Arial, sans-serif`;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 18;
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = "#0a2338";
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.99;
+                ctx.strokeText(data[0][i].name, pt.x, pt.y);
+                ctx.fillText(data[0][i].name, pt.x, pt.y);
+                ctx.restore();
+              }
+            }
+          }
+          ctx.save();
+          ctx.font = "bold 22px Segoe UI";
+          ctx.fillStyle = "#fff";
+          ctx.textAlign = "center";
+          ctx.shadowColor = "#00e2ff";
+          ctx.shadowBlur = 12;
+          ctx.fillText(
+            "Epoch " +
+              (showMovement
+                ? moveFrom + 1 + "→" + (moveFrom + 2)
+                : currentEpoch + 1),
+            W / 2,
+            38
+          );
+          ctx.restore();
+        }
+
+        function animateEpochs(idx = 0) {
+          if (idx >= epochs - 1) {
+            currentEpoch = epochs - 1;
+            drawBridge();
+            animating = false;
+            btnPlay.disabled = false;
+            return;
+          }
+          animating = true;
+          let steps = 40;
+          let frame = 0;
+          function step() {
+            let moveProgress = frame / steps;
+            drawBridge(true, moveProgress, idx);
+            if (frame < steps) {
+              frame++;
+              animationTimeout = setTimeout(step, animationSpeed / steps);
+            } else {
+              currentEpoch = idx + 1;
+              drawBridge();
+              animationTimeout = setTimeout(() => animateEpochs(idx + 1), 400);
+            }
+          }
+          step();
+        }
+
+        // Deformation calculation & export
+        function calculateDeformationTable(
+          dataEpoch1,
+          dataEpoch2,
+          dataEpoch3,
+          sisi = "KIRI"
+        ) {
+          let table = [
+            [
+              "TITIK",
+              "Dx_1-2",
+              "Dy_1-2",
+              "Dz_1-2",
+              "Dx_2-3",
+              "Dy_2-3",
+              "Dz_2-3",
+              "SISI",
+            ],
+          ];
+          for (let i = 0; i < dataEpoch1.length; i++) {
+            let t = dataEpoch1[i].name;
+            let dx12 = dataEpoch2[i].easting - dataEpoch1[i].easting;
+            let dy12 = dataEpoch2[i].northing - dataEpoch1[i].northing;
+            let dz12 = (dataEpoch2[i].elev || 0) - (dataEpoch1[i].elev || 0);
+            let dx23 = dataEpoch3[i].easting - dataEpoch2[i].easting;
+            let dy23 = dataEpoch3[i].northing - dataEpoch2[i].northing;
+            let dz23 = (dataEpoch3[i].elev || 0) - (dataEpoch2[i].elev || 0);
+            table.push([t, dx12, dy12, dz12, dx23, dy23, dz23, sisi]);
+          }
+          return table;
+        }
+
+        function exportDeformationExcel() {
+          if (dataLeft.length !== 3 || dataRight.length !== 3) return;
+          let tableL = calculateDeformationTable(
+            dataLeft[0],
+            dataLeft[1],
+            dataLeft[2],
+            "KIRI"
+          );
+          let tableR = calculateDeformationTable(
+            dataRight[0],
+            dataRight[1],
+            dataRight[2],
+            "KANAN"
+          );
+          let wb = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet(tableL),
+            "Deformasi_KIRI"
+          );
+          XLSX.utils.book_append_sheet(
+            wb,
+            XLSX.utils.aoa_to_sheet(tableR),
+            "Deformasi_KANAN"
+          );
+          XLSX.writeFile(wb, "deformasi_jembatan.xlsx");
+        }
+
+        function updateDownloadButton() {
+          if (dataLeft.length === 3 && dataRight.length === 3) {
+            downloadBtn.style.display = "";
+          } else {
+            downloadBtn.style.display = "none";
+          }
+        }
+        downloadBtn.addEventListener("click", exportDeformationExcel);
+
+        processBtn.addEventListener("click", async function () {
+          errorMsg.style.display = "none";
+          errorMsg.textContent = "";
+          const filesLeft = [
+            document.getElementById("file_left_e1").files[0],
+            document.getElementById("file_left_e2").files[0],
+            document.getElementById("file_left_e3").files[0],
+          ];
+          const filesRight = [
+            document.getElementById("file_right_e1").files[0],
+            document.getElementById("file_right_e2").files[0],
+            document.getElementById("file_right_e3").files[0],
+          ];
+          let allValid = true;
+          filesLeft.forEach((f, i) =>
+            setFileStatus(fileInputIds[i], f ? "ok" : "fail")
+          );
+          filesRight.forEach((f, i) =>
+            setFileStatus(fileInputIds[i + 3], f ? "ok" : "fail")
+          );
+          if (filesLeft.some((f) => !f) || filesRight.some((f) => !f)) {
+            errorMsg.textContent = "Semua file harus diisi!";
+            errorMsg.style.display = "block";
+            allValid = false;
+          }
+          if (!allValid) {
+            visualizationPanel.style.display = "none";
+            downloadBtn.style.display = "none";
+            return;
+          }
+          try {
+            const [l1, l2, l3, r1, r2, r3] = await Promise.all([
+              readExcel(filesLeft[0]),
+              readExcel(filesLeft[1]),
+              readExcel(filesLeft[2]),
+              readExcel(filesRight[0]),
+              readExcel(filesRight[1]),
+              readExcel(filesRight[2]),
+            ]);
+            dataLeft = [
+              parsePointTable(l1),
+              parsePointTable(l2),
+              parsePointTable(l3),
+            ];
+            dataRight = [
+              parsePointTable(r1),
+              parsePointTable(r2),
+              parsePointTable(r3),
+            ];
+            if (
+              dataLeft.some((a) => a.length === 0) ||
+              dataRight.some((a) => a.length === 0)
+            ) {
+              fileInputIds.forEach((id) => setFileStatus(id, "fail"));
+              throw new Error(
+                "Format file tidak sesuai. Pastikan header dan urutan titik sama. (titik, utm_x, utm_y, utm_z)"
+              );
+            }
+            for (let side of [dataLeft, dataRight]) {
+              for (let i = 1; i < epochs; i++) {
+                if (
+                  side[i].length !== side[0].length ||
+                  !side[i].every((pt, idx) => pt.name === side[0][idx].name)
+                ) {
+                  fileInputIds.forEach((id) => setFileStatus(id, "fail"));
+                  throw new Error(
+                    "Nama & jumlah titik harus sama dan urut di setiap file sisi."
+                  );
+                }
+              }
+            }
+            fileInputIds.forEach((id) => setFileStatus(id, "ok"));
+            ballSize = parseInt(ballsizeInput.value);
+            animationSpeed = parseInt(speedInput.value);
+            currentEpoch = 0;
+            visualizationPanel.style.display = "block";
+            fadeInCanvas(() => drawBridge());
+            legend.innerHTML = `
+        <span><span class="dot" style="background:${colorLeft}"></span> Sisi KIRI</span>
+        <span><span class="dot" style="background:${colorRight}"></span> Sisi KANAN</span>
+      `;
+            btnPlay.disabled = false;
+            btnReset.disabled = false;
+            updateDownloadButton();
+            window.scrollTo({
+              top: visualizationPanel.offsetTop - 60,
+              behavior: "smooth",
+            });
+          } catch (err) {
+            fileInputIds.forEach((id) => setFileStatus(id, "fail"));
+            errorMsg.textContent = err.message || "Gagal membaca file!";
+            errorMsg.style.display = "block";
+            legend.innerHTML = "";
+            drawEmpty();
+            visualizationPanel.style.display = "none";
+            downloadBtn.style.display = "none";
+          }
+        });
+
+        ballsizeInput.addEventListener("input", () => {
+          ballSize = parseInt(ballsizeInput.value);
+          if (dataLeft.length) drawBridge();
+        });
+        speedInput.addEventListener("input", () => {
+          animationSpeed = parseInt(speedInput.value);
+        });
+
+        btnPlay.addEventListener("click", () => {
+          if (animating || dataLeft.length === 0) return;
+          ballSize = parseInt(ballsizeInput.value);
+          animationSpeed = parseInt(speedInput.value);
+          currentEpoch = 0;
+          fadeInCanvas(() => drawBridge());
+          setTimeout(() => {
+            animating = true;
+            btnPlay.disabled = true;
+            btnReset.disabled = false;
+            animationTimeout = setTimeout(() => animateEpochs(0), 500);
+          }, 400);
+        });
+
+        btnReset.addEventListener("click", () => {
+          if (animationTimeout) clearTimeout(animationTimeout);
+          animating = false;
+          currentEpoch = 0;
+          fadeInCanvas(() => drawBridge());
+          btnPlay.disabled = false;
+        });
+
+        btnPlay.disabled = true;
+        btnReset.disabled = true;
+        drawEmpty();
+        visualizationPanel.style.display = "none";
+        downloadBtn.style.display = "none";
+      });
+    </script>
+  </body>
+</html>
